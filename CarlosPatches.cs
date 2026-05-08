@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,9 +50,9 @@ namespace CarlosReturn
                     audioManager.PlaySound("car_music_elevator");
                     break;
                 case "school":
-                    audioManager.PlaySound("car_music_school");
+                    if (!CarlosBasePlugin.hardMode.Value)
+                        audioManager.PlaySound("car_music_school");
                     break;
-                default: return true;
             }
 
             return false;
@@ -66,13 +67,14 @@ namespace CarlosReturn
         }
     }
 
-    [HarmonyPatch(typeof(BaldiTV), "Speak")]
+    [HarmonyPatch(typeof(BaldiTV))]
     internal static class BaldiTVPatch
     {
+        [HarmonyPatch("Speak")]
         [HarmonyPrefix]
-        private static bool SpeakPatch(SoundObject sound)
+        private static bool SpeakPatch()
         {
-            return CarlosBasePlugin.assetManager.ContainsKey(sound.soundKey);
+            return false;
         }
     }
 
@@ -87,16 +89,6 @@ namespace CarlosReturn
             else
                 CarlosManager.wrongAnswers++;
         }
-        //[HarmonyPostfix]
-        //private static void CompletedPatch(Activity __instance)
-        //{
-        //    FieldInfo notebook = typeof(Activity).GetField("notebook", BindingFlags.Instance | BindingFlags.NonPublic);
-        //    object noteObject = notebook.GetValue(__instance);
-        //    if (noteObject is Notebook _notebook)
-        //    {
-        //        _notebook
-        //    }
-        //}
     }
 
     [HarmonyPatch(typeof(BreakerController), "Initialize")]
@@ -106,7 +98,7 @@ namespace CarlosReturn
         private static void InitializePatch(BreakerController __instance)
         {
             FieldInfo info = typeof(BreakerController).GetField("maxPowered", BindingFlags.NonPublic | BindingFlags.Instance);
-            info.SetValue(__instance, 5);
+            info.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
         }
     }
     [HarmonyPatch(typeof(PowerLeverGauge), "Initialize")]
@@ -116,9 +108,9 @@ namespace CarlosReturn
         private static void InitializePatch(PowerLeverGauge __instance)
         {
             FieldInfo leverInfo = typeof(PowerLeverGauge).GetField("maxLevers", BindingFlags.NonPublic | BindingFlags.Instance);
-            leverInfo.SetValue(__instance, 5);
+            leverInfo.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
             FieldInfo speedInfo = typeof(PowerLeverGauge).GetField("gaugeSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
-            speedInfo.SetValue(__instance, 4);
+            speedInfo.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 4);
         }
     }
 
@@ -169,15 +161,39 @@ namespace CarlosReturn
         }
     }
 
-    //[HarmonyPatch(typeof(Entity), "Update")]
-    //internal class EntityPatch
-    //{
-    //    [HarmonyPostfix]
-    //    private static void UpdatePatch(Entity __instance)
-    //    {
-    //        if (!__instance.GetComponent<CarlosGhost>()) return;
+    [HarmonyPatch(typeof(SubtitleManager), "CreateSub")]
+    internal class SubtitleManagerPatch
+    {
+        [HarmonyPrefix]
+        private static bool CreateSubPatch()
+        {
+            return !CarlosBasePlugin.hardMode.Value;
+        }
+    }
 
+    [HarmonyPatch(typeof(NameManager), "Awake")]
+    internal class NameManagerPatch
+    {
+        [HarmonyPrefix]
+        private static void AwakePatch(NameManager __instance)
+        {
+            FieldInfo audSource = typeof(NameManager).GetField("audSource", BindingFlags.NonPublic | BindingFlags.Instance);
+            AudioSource source = (AudioSource)audSource.GetValue(__instance);
+            source.volume = 0;
 
-    //    }
-    //}
+            GameObject mouth = __instance.transform.parent.GetComponentsInChildren<Animator>().First(i => i.name == "Mouth").gameObject;
+            mouth.SetActive(false);
+        }
+    }
+
+    [HarmonyPatch(typeof(AmbienceRoomFunction))]
+    internal class AmbienceRoomFunctionPatch
+    {
+        [HarmonyPatch("OnPlayerEnter")]
+        [HarmonyPrefix]
+        private static bool OnPlayerEnterPatch()
+        {
+            return false;
+        }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
@@ -8,7 +9,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace CarlosReturn
@@ -41,7 +41,7 @@ namespace CarlosReturn
             new ModAsset() {assetName = "car_ambience", assetPath = "Sounds/Music/", assetType = AssetType.Audio, soundType = SoundType.Music},
             new ModAsset() {assetName = "car_angry", assetPath = "Sounds/Music/", assetType = AssetType.Audio, soundType = SoundType.Music},
 
-            new ModAsset() {assetName = "carlos_spawn", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "*BANG*"},
+            new ModAsset() {assetName = "carlos_spawn", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, subtitle = "[BANG]"},
             new ModAsset() {assetName = "carlos_see", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "!!!!!"},
             new ModAsset() {assetName = "carlos_lost", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "..... ???"},
             new ModAsset() {assetName = "carlos_notice", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = ". . ."},
@@ -50,29 +50,22 @@ namespace CarlosReturn
             new ModAsset() {assetName = "carlosghost_ambience_low", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "*Humming*"},
             new ModAsset() {assetName = "carlosghost_ambience", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "*HUMMING*"},
 
-            new ModAsset() {assetName = "car_carlosMintsLarge", assetPath = "Textures/Items/", imgPPU = 1},
-            new ModAsset() {assetName = "car_carlosMintsSmall", assetPath = "Textures/Items/", imgPPU = 1},
-            new ModAsset() {assetName = "car_josephsCookiesLarge", assetPath = "Textures/Items/", imgPPU = 1},
-            new ModAsset() {assetName = "car_josephsCookiesSmall", assetPath = "Textures/Items/", imgPPU = 1},
-            new ModAsset() {assetName = "car_scottishFishLarge", assetPath = "Textures/Items/", imgPPU = 1},
-            new ModAsset() {assetName = "car_scottishFishSmall", assetPath = "Textures/Items/", imgPPU = 1},
-
             new ModAsset() {assetName = "car_ambient", assetPath = "Sounds/Ambience/", assetType = AssetType.Audio, assetAmount = 8},
 
             new ModAsset() {assetName = "car_notebook_collect", assetPath = "Sounds/Effects/", assetType = AssetType.Audio},
             new ModAsset() {assetName = "car_act_correct", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = ":)", color = Color.white},
             new ModAsset() {assetName = "car_act_incorrect", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = ">:(", color = new Color32(216, 12, 14, 255)},
-            new ModAsset() {assetName = "car_door_open", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "*Creak*", color = Color.white},
-            new ModAsset() {assetName = "car_door_shut", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "*Slam*", color = Color.white},
-            new ModAsset() {assetName = "car_door_swing", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "*SSwwiinngg*", color = Color.white},
-            new ModAsset() {assetName = "car_alarm", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "*!!!*", color = Color.red},
-            new ModAsset() {assetName = "car_alarm_reverb", assetPath = "Sounds/Effects/", assetType = AssetType.Audio},
+            new ModAsset() {assetName = "car_door_open", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Creak]", color = Color.white},
+            new ModAsset() {assetName = "car_door_shut", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Slam]", color = Color.white},
+            new ModAsset() {assetName = "car_door_swing", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[SSwwiinngg]", color = Color.white},
+            new ModAsset() {assetName = "car_alarm", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[!!!]", color = Color.red},
+            new ModAsset() {assetName = "car_alarm_reverb", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[!!!]", color = Color.red},
             new ModAsset() {assetName = "car_buzz", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = ":)", color = Color.grey},
         };
 
-        public static Pickup[] items;
-
         public static List<SoundObject> audioclips = new List<SoundObject>();
+
+        public static ConfigEntry<bool> hardMode;
 
         public void Awake()
         {
@@ -88,20 +81,10 @@ namespace CarlosReturn
             GeneratorManagement.Register(this, GenerationModType.Base, EditFloor);
 
             MTM101BaldiDevAPI.AddWarningScreen("Please turn all of your audio all the way up.\nCaptions are optional, but recommended.\n\nAudio is required and essential of this mod.\n\nGood luck. ;)\n- Carlos", false);
-            MTM101BaldiDevAPI.AddWarningScreen("Credits to BigThinker for Joseph and ConfusedSeagul for their code.\nI had no idea how to code this,\nbut atleast I learned how to do this.\n\nThanks for getting my mod! :D\n- HGThePublisher", false);
+            MTM101BaldiDevAPI.AddWarningScreen("Credits to BigThinker for J***** and ConfusedSeagull for their code.\nThis mod was developed for GraysLand.\n\n\nI had no idea how to code this,\nbut atleast I learned how to do this.", false);
+            MTM101BaldiDevAPI.AddWarningScreen("This is my first BB+ mod I've ever made, this mod was developed before BigThinker drauma happened. This mod isn't affiliated with anything related to that.\nRIP BigThinker's Mods. :(\nThanks for getting my mod! :D\n- HGThePublisher", false);
 
-            for (int i = 1; i <= assets.First(asset => asset.assetName == "car_ambient").assetAmount; i++)
-                CarlosAmbienceManager.ambience.Add(assetManager.Get<SoundObject>("car_ambient" + i));
-
-            audioclips.Add(assetManager.Get<SoundObject>("car_notebook_collect"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_act_correct"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_act_incorrect"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_door_open"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_door_shut"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_door_swing"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_alarm"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_alarm_reverb"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_buzz"));
+            hardMode = Config.Bind("Settings", "Impossible", false, "If this mod wasn't a challenge enough, try beating this.");
         }
 
         internal enum AssetType
@@ -233,37 +216,18 @@ namespace CarlosReturn
 
             assetManager.Add("CarlosGhost", carlosGhost);
 
-            ItemObject[] itemObjects = new ItemObject[]
-            {
-                new ItemBuilder(Info)
-                .SetEnum("CarlosMints")
-                .SetNameAndDescription("Carlos' Mints", "A brand of mints named after carlos for whatever reason.")
-                .SetSprites(assetManager.Get<Sprite>("car_carlosMintsSmall"), assetManager.Get<Sprite>("car_carlosMintsLarge"))
-                .SetItemComponent<CarlosItem>()
-                .Build(),
-                new ItemBuilder(Info)
-                .SetEnum("JosephsCookies")
-                .SetNameAndDescription("Joseph's Cookies", "Non-cannon brand of Joseph, it's actually pretty good.")
-                .SetSprites(assetManager.Get<Sprite>("car_josephsCookiesSmall"), assetManager.Get<Sprite>("car_josephsCookiesLarge"))
-                .SetItemComponent<CarlosItem>()
-                .Build(),
-                new ItemBuilder(Info)
-                .SetEnum("ScottishFish")
-                .SetNameAndDescription("Scottish Fish", "It's Blue's Scottish Fish, totally not a blue rebrand of another candy...")
-                .SetSprites(assetManager.Get<Sprite>("car_scottishFishSmall"), assetManager.Get<Sprite>("car_scottishFishLarge"))
-                .SetItemComponent<CarlosItem>()
-                .Build(),
-            };
-            List<Pickup> pickups = new List<Pickup>();
-            foreach (ItemObject item in itemObjects)
-                pickups.Add(new Pickup()
-                {
-                    item = item,
-                    free = false,
-                    price = 200,
-                    showDescription = true,
-                });
-            items = pickups.ToArray();
+            for (int i = 1; i <= assets.First(asset => asset.assetName == "car_ambient").assetAmount; i++)
+                CarlosAmbienceManager.ambience.Add(assetManager.Get<SoundObject>("car_ambient" + i));
+
+            audioclips.Add(assetManager.Get<SoundObject>("car_notebook_collect"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_act_correct"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_act_incorrect"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_door_open"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_door_shut"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_door_swing"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_alarm"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_alarm_reverb"));
+            audioclips.Add(assetManager.Get<SoundObject>("car_buzz"));
         }
 
         private bool posterOnce = false;
@@ -285,7 +249,7 @@ namespace CarlosReturn
                     name = "Carlos Poster " + i,
                     baseTexture = assetManager.Get<Texture2D>("car_poster" + i)
                 });
-
+        
             foreach (PosterObject poster in posterObjects)
                 posters.Add(new WeightedPosterObject()
                 {
@@ -314,7 +278,10 @@ namespace CarlosReturn
             scene.levelObject.hallFloorTexs = new WeightedTexture2D[] { floorNumber >= 2 ? floorTexture1 : floorNumber == 1 ? floorTexture2 : floorTexture2 };
             scene.levelObject.hallCeilingTexs = new WeightedTexture2D[] { floorNumber >= 2 ? ceilingTexture2 : floorNumber == 1 ? ceilingTexture2 : ceilingTexture1 };
 
-            scene.mapPrice = 0;
+            if (hardMode.Value)
+                scene.mapPrice = 999999;
+            else
+                scene.mapPrice = 1;
 
             if (floorNumber >= 2)
             {
@@ -325,12 +292,51 @@ namespace CarlosReturn
 
             scene.levelObject.potentialStructures = new WeightedStructureWithParameters[] { };
 
-            Debug.Log(scene.levelObject.potentialStructures.Length);
-            StructureWithParameters[] structures = new StructureWithParameters[]
+            StructureWithParameters[] structures = new StructureWithParameters[0];
+            if (!hardMode.Value)
             {
-                Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Maintenance_Lvl4").forcedStructures.First(item => item.prefab.name == "PowerLeverConstructor"),
-                Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Schoolhouse_Lvl2").forcedStructures.First(item => item.prefab.name == "Structure_Lockers"),
-            };
+                structures = new StructureWithParameters[]
+                {
+                    Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Maintenance_Lvl4").forcedStructures.First(item => item.prefab.name == "PowerLeverConstructor"),
+                    Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Schoolhouse_Lvl2").forcedStructures.First(item => item.prefab.name == "Structure_Lockers"),
+                    Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Schoolhouse_Lvl2").forcedStructures.First(item => item.prefab.name == "Structure_EnvironmentObjectBuilder_Weighted"),
+                };
+                if (floorNumber == 1)
+                    structures = structures.AddRangeToArray(new StructureWithParameters[]
+                    {
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Factory_Lvl4").forcedStructures.First(item => item.prefab.name == "ConveyorBeltConstructor"),
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Factory_Lvl4").forcedStructures.First(item => item.prefab.name == "Rotohall_Structure"),
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Factory_Lvl4").forcedStructures.First(item => item.prefab.name == "FactoryBoxConstructor"),
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Factory_Lvl4").forcedStructures.First(item => item.prefab.name == "Structure_EnvironmentObjectBuilder_Weighted"),
+                    });
+                else if (floorNumber >= 2)
+                    structures = structures.AddRangeToArray(new StructureWithParameters[]
+                    {
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Maintenance_Lvl5").forcedStructures.First(item => item.prefab.name == "Structure_Vent"),
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Maintenance_Lvl5").forcedStructures.First(item => item.prefab.name == "Structure_EnvironmentObjectBuilder_Weighted"),
+                    });
+            }
+            else
+            {
+                structures = new StructureWithParameters[]
+                {
+                    Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Maintenance_Lvl4").forcedStructures.First(item => item.prefab.name == "PowerLeverConstructor"),
+                    Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Schoolhouse_Lvl2").forcedStructures.First(item => item.prefab.name == "Structure_Lockers"),
+                };
+                if (floorNumber == 1)
+                    structures = structures.AddRangeToArray(new StructureWithParameters[]
+                    {
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Factory_Lvl4").forcedStructures.First(item => item.prefab.name == "ConveyorBeltConstructor"),
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Factory_Lvl4").forcedStructures.First(item => item.prefab.name == "Rotohall_Structure"),
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Factory_Lvl4").forcedStructures.First(item => item.prefab.name == "FactoryBoxConstructor"),
+                    });
+                else if (floorNumber >= 2)
+                    structures = structures.AddRangeToArray(new StructureWithParameters[]
+                    {
+                        Resources.FindObjectsOfTypeAll<LevelObject>().First(level => level.name == "Maintenance_Lvl5").forcedStructures.First(item => item.prefab.name == "Structure_Vent"),
+                    });
+            }
+
             scene.levelObject.forcedStructures = structures;
         }
 

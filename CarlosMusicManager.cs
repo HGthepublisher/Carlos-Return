@@ -1,43 +1,37 @@
-﻿using UnityEngine;
+﻿using MTM101BaldAPI;
+using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace CarlosReturn
 {
     public class CarlosMusicManager : MonoBehaviour
     {
+        public static CarlosMusicManager Instance { get; private set; }
+
         public AudioManager audioManager;
-        public AudioManager chasingManager;
-
-        private SoundObject ambience;
-        private SoundObject angry;
-
-        private bool angryDB;
         
         private void Awake()
         {
-            audioManager = gameObject.AddComponent<AudioManager>();
-            audioManager.audioDevice = gameObject.AddComponent<AudioSource>();
-            audioManager.positional = false;
-            audioManager.volumeModifier = 0.65f;
-            audioManager.maintainLoop = true;
-            audioManager.useUnscaledPitch = true;
-            audioManager.ignoreListenerPause = true;
+            if (Instance)
+                Destroy(gameObject);
+            Instance = this;
 
-            chasingManager = gameObject.AddComponent<AudioManager>();
-            chasingManager.audioDevice = gameObject.AddComponent<AudioSource>();
-            chasingManager.positional = false;
-            chasingManager.volumeModifier = 0.42f;
-            chasingManager.maintainLoop = true;
-            chasingManager.useUnscaledPitch = true;
-            chasingManager.ignoreListenerPause = true;
-
-            ambience = CarlosBasePlugin.assetManager.Get<SoundObject>("car_ambience");
-            angry = CarlosBasePlugin.assetManager.Get<SoundObject>("car_angry");
+            if (!audioManager)
+            {
+                audioManager = gameObject.AddComponent<AudioManager>();
+                audioManager.positional = false;
+                audioManager.volumeModifier = 0.65f;
+                audioManager.maintainLoop = true;
+                audioManager.useUnscaledPitch = true;
+                audioManager.ignoreListenerPause = true;
+            }
         }
 
         public void PlaySound(string sound, bool loop = true)
         {
             SoundObject currentSound = CarlosBasePlugin.assetManager.Get<SoundObject>(sound);
 
+            audioManager.volumeModifier = sound == "car_ambience" ? 0.1f : 0.65f;
             audioManager.Pause(false);
             audioManager.SetLoop(loop);
             audioManager.QueueAudio(currentSound, true);
@@ -46,18 +40,6 @@ namespace CarlosReturn
         {
             if (audioManager)
                 audioManager.FlushQueue(true);
-        }
-
-        private void Update()
-        {
-            if (CarlosManager.carlosAngry != angryDB)
-                chasingManager.FlushQueue(true);
-            angryDB = CarlosManager.carlosAngry;
-
-            if (CarlosManager.carlos && !audioManager.AnyAudioIsPlaying && !chasingManager.QueuedUp)
-                chasingManager.QueueAudio(angryDB ? angry : ambience);
-            else if (audioManager.AnyAudioIsPlaying)
-                chasingManager.FlushQueue(true);
         }
     }
 }

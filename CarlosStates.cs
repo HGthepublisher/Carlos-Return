@@ -100,9 +100,9 @@ namespace CarlosReturn
             seesPlayer = false;
         }
 
-        public override void OnStateTriggerStay(Collider other, bool validCollision)
+        public override void OnStateTriggerStay(Entity otherEntity, Collider other, bool validCollision)
         {
-            base.OnStateTriggerStay(other, validCollision);
+            base.OnStateTriggerStay(otherEntity, other, validCollision);
             if (validCollision && other.GetComponent<PlayerManager>())
                 carlos.behaviorStateMachine.ChangeState(new Carlos_Warning(carlos));
         }
@@ -192,8 +192,6 @@ namespace CarlosReturn
         public override void DestinationEmpty()
         {
             base.DestinationEmpty();
-            Debug.Log(checkingLocker);
-            Debug.Log(locker);
             if (checkingLocker)
                 carlos.ChangeBehaviourState(new Carlos_CheckLocker(carlos, locker, true));
             else
@@ -203,9 +201,9 @@ namespace CarlosReturn
             }
         }
 
-        public override void OnStateTriggerStay(Collider other, bool validCollision)
+        public override void OnStateTriggerStay(Entity otherEntity, Collider other, bool validCollision)
         {
-            base.OnStateTriggerStay(other, validCollision);
+            base.OnStateTriggerStay(otherEntity, other, validCollision);
             if (validCollision && other.GetComponent<PlayerManager>())
                 carlos.behaviorStateMachine.ChangeState(new Carlos_Warning(carlos));
         }
@@ -244,6 +242,8 @@ namespace CarlosReturn
                 carlos.StopAudio();
                 carlos.EnableRenderer(false);
                 carlos.SetSpeed(carlos.madSpeed);
+
+                CarlosMusicManager.Instance.StopSound();
 
                 cooldown = carlos.madDelay;
                 ChangeNavigationState(new NavigationState_WanderFlee(npc, 0, carlos.player.DijkstraMap));
@@ -310,6 +310,8 @@ namespace CarlosReturn
             base.Enter();
             carlos.StopAudio();
 
+            CarlosMusicManager.Instance.PlaySound("car_angry", true);
+
             carlos.ChangeTexture(carlos.carlosMad);
             ChangeNavigationState(new NavigationState_WanderRandom(npc, 0));
 
@@ -326,9 +328,9 @@ namespace CarlosReturn
             carlos.PlayAudio(carlos.carAngry, true);
         }
 
-        public override void OnStateTriggerStay(Collider other, bool validCollision)
+        public override void OnStateTriggerStay(Entity otherEntity, Collider other, bool validCollision)
         {
-            base.OnStateTriggerStay(other, validCollision);
+            base.OnStateTriggerStay(otherEntity, other, validCollision);
             if (validCollision && other.GetComponent<PlayerManager>())
                 CoreGameManager.Instance.ReturnToMenu();
         }
@@ -382,7 +384,7 @@ namespace CarlosReturn
             time -= Time.deltaTime * npc.ec.EnvironmentTimeScale;
             if (time <= 0)
             {
-                if ((Random.Range(gameManager.FoundNotebooks, gameManager.NotebookTotal) >= gameManager.NotebookTotal - 1) && locker.playerInside)
+                if ((Random.Range(gameManager.FoundNotebooks, gameManager.NotebookTotal) >= gameManager.NotebookTotal - 1 || CarlosBasePlugin.hardMode.Value) && locker.playerInside)
                 {
                     locker.ForceOpen();
                     carlos.ChangeBehaviourState(new Carlos_Warning(carlos));

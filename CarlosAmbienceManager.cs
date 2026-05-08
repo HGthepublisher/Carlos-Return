@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MTM101BaldAPI;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CarlosReturn
@@ -11,36 +12,38 @@ namespace CarlosReturn
 
         public static List<SoundObject> ambience = new List<SoundObject>();
 
-        private float delayTime = 0;
+        private float delayTime = 60;
+        private float RadomDelay() { return 60 * (Random.Range(8, 22) / 10); }
 
         private void Awake()
         {
-            audioManager = gameObject.AddComponent<AudioManager>();
-            audioManager.audioDevice = gameObject.AddComponent<AudioSource>();
-            audioManager.positional = true;
-            audioManager.volumeModifier = 0.8f;
-            audioManager.maintainLoop = false;
-
-            SetDelay();
+            if (!audioManager)
+            {
+                audioManager = gameObject.AddComponent<AudioManager>();
+                audioManager.positional = true;
+                audioManager.volumeModifier = 0.8f;
+                audioManager.maintainLoop = false;
+            }
         }
 
+        private bool db = false;
         private void Update()
         {
-            if (!audioManager || ambience.Count <= 0) return;
-
+            if (!audioManager || ambience.Count <= 0 || db) return;
+            db = true;
+             
             delayTime -= Time.deltaTime * ec.EnvironmentTimeScale;
 
             if (delayTime <= 0)
             {
-                SetDelay();
+                delayTime = RadomDelay();
 
-                transform.position = CoreGameManager.Instance.GetPlayer(0).transform.position + new Vector3(Random.Range(-20, 20), 0, Random.Range(-20, 20));
                 SoundObject ambient = ambience[Random.Range(1, ambience.Count)];
                 ambient.subtitle = false;
                 audioManager.PlaySingle(ambient);
             }
-        }
 
-        private void SetDelay() => delayTime = 60 * (Random.Range(8, 22) / 10);
+            db = false;
+        }
     }
 }

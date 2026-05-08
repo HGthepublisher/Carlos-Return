@@ -17,10 +17,12 @@ namespace CarlosReturn
         private void Start()
         {
             List<Cell> rooms = ec.AllTilesNoGarbage(false, true);
-            Debug.Log(rooms.Count);
 
             NPC carlosGhost = CarlosBasePlugin.assetManager.Get<NPC>("CarlosGhost");
             int numberOfGhosts = CoreGameManager.Instance.sceneObject.levelTitle == "F1" ? 5 : CoreGameManager.Instance.sceneObject.levelTitle == "F2" ? 7 : 8;
+            if (CarlosBasePlugin.hardMode.Value)
+                numberOfGhosts = (int)(numberOfGhosts * 1.5f);
+
             for (int i = 1; i <= numberOfGhosts; i++)
                 ec.SpawnNPC(carlosGhost, rooms[Random.Range(1, rooms.Count)].position);
         }
@@ -30,6 +32,7 @@ namespace CarlosReturn
         {
             if (breakerInfo == null)
                 breakerInfo = AccessTools.Field(typeof(BreakerController), "fuseBlown");
+            if (breakerInfo == null) return;
 
             fuseBlown = (bool)breakerInfo.GetValue(null);
         }

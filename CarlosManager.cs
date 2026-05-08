@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using HarmonyLib;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace CarlosReturn
 {
     public class CarlosManager : MonoBehaviour
     {
-        public static NPC carlos;
+        public static Carlos carlos;
         public static bool chasing = false;
         public static Color carlosColor = new Color32(32, 153, 244, 255);
 
@@ -17,7 +19,7 @@ namespace CarlosReturn
         private bool baldiDestroyed = false;
         private bool spawned = false;
 
-        private readonly float poweroutageMinutes = 4.5f;
+        private float poweroutageMinutes = 4.5f;
 
         private readonly string[] floors = new string[]
         {
@@ -35,6 +37,9 @@ namespace CarlosReturn
 
         private void Start()
         {
+            if (CarlosBasePlugin.hardMode.Value)
+                poweroutageMinutes = 1.5f;
+
             rightAnswers = 0;
             wrongAnswers = 0;
 
@@ -44,6 +49,7 @@ namespace CarlosReturn
                 animator.enabled = false;
                 Animator mouthAnim = animator.GetComponentInChildren<Animator>();
                 mouthAnim.enabled = false;
+                return;
             }
             if (!floors.Any(floor => CoreGameManager.Instance.sceneObject.levelTitle == floor))
                 Destroy(gameObject);
@@ -68,7 +74,9 @@ namespace CarlosReturn
             }
 
             int neededNotebooks = CoreGameManager.Instance.sceneObject.levelTitle == "F1" ? 3 : CoreGameManager.Instance.sceneObject.levelTitle == "F2" ? 2 : 1;
-            if (!spawned && (MainGameManager.Instance.FoundNotebooks >= neededNotebooks || wrongAnswers > 0))
+            if (CarlosBasePlugin.hardMode.Value)
+                neededNotebooks = 0;
+            if (!spawned && (rightAnswers >= neededNotebooks || wrongAnswers > 0))
             {
                 spawned = true;
 
@@ -78,7 +86,9 @@ namespace CarlosReturn
                         rooms.Add(room);
 
                 NPC newCarlos = CarlosBasePlugin.assetManager.Get<NPC>("Carlos");
-                NPC carlosInstance = ec.SpawnNPC(newCarlos, rooms[Random.Range(1, rooms.Count)].RandomEntitySafeCellNoGarbage().position);
+                Carlos carlosInstance = (Carlos)ec.SpawnNPC(newCarlos, rooms[Random.Range(1, rooms.Count)].RandomEntitySafeCellNoGarbage().position);
+                if (CarlosBasePlugin.hardMode.Value)
+                    carlosInstance.warnings = 2;
 
                 carlos = carlosInstance;
 
@@ -87,6 +97,8 @@ namespace CarlosReturn
                 GameObject carlosGhostManagerObject = new GameObject("CarlosGhostManager");
                 CarlosGhostManager carlosGhostManager = carlosGhostManagerObject.AddComponent<CarlosGhostManager>();
                 carlosGhostManager.ec = ec;
+
+                CarlosMusicManager.Instance.PlaySound("car_ambience");
             }
 
             if (CoreGameManager.Instance.sceneObject.levelObject == null) return;
@@ -94,7 +106,9 @@ namespace CarlosReturn
             if (breaker && poweroutageTime <= 0 && !chasing)
             {
                 poweroutageTime = 60 * poweroutageMinutes;
-                breaker.Invoke("BlowFuse", 0);
+                FieldInfo fuseBlown = typeof(BreakerController).GetField("fuseBlown", BindingFlags.NonPublic | BindingFlags.Static);
+                if ((bool)fuseBlown.GetValue(null))
+                    breaker.Invoke("BlowFuse", 0);
             }
             else
                 poweroutageTime -= Time.deltaTime * ec.EnvironmentTimeScale;

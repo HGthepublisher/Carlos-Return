@@ -18,6 +18,8 @@ namespace CarlosReturn
         {
             base.Initialize();
             Entity.SetHeight(6.4f);
+            if (CarlosBasePlugin.hardMode.Value)
+                Navigator.speed *= 1.8f;
 
             SpriteRotator sr = spriteRenderer[0].gameObject.AddComponent<SpriteRotator>();
 
@@ -36,8 +38,8 @@ namespace CarlosReturn
         protected override void VirtualUpdate()
         {
             base.VirtualUpdate();
-            if (db == CarlosGhostManager.fuseBlown) return;
-            db = CarlosGhostManager.fuseBlown;
+            if (db == CarlosGhostManager.fuseBlown && CarlosManager.carlos.warnings < 4) return;
+            db = CarlosGhostManager.fuseBlown && CarlosManager.carlos.warnings < 4;
 
             if (db)
                 behaviorStateMachine.ChangeState(new CarlosGhost_Prep(this));
