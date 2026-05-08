@@ -82,7 +82,7 @@ namespace CarlosReturn
 
             MTM101BaldiDevAPI.AddWarningScreen("Please turn all of your audio all the way up.\nCaptions are optional, but recommended.\n\nAudio is required and essential of this mod.\n\nGood luck. ;)\n- Carlos", false);
             MTM101BaldiDevAPI.AddWarningScreen("Credits to BigThinker for J***** and ConfusedSeagull for their code.\nThis mod was developed for GraysLand.\n\n\nI had no idea how to code this,\nbut atleast I learned how to do this.", false);
-            MTM101BaldiDevAPI.AddWarningScreen("This is my first BB+ mod I've ever made, this mod was developed before BigThinker drauma happened. This mod isn't affiliated with anything related to that.\nRIP BigThinker's Mods. :(\nThanks for getting my mod! :D\n- HGThePublisher", false);
+            MTM101BaldiDevAPI.AddWarningScreen("This is my first BB+ mod I've ever made, this mod was developed before BigThinker drama happened. This mod isn't affiliated with anything related to that.\nRIP BigThinker's Mods. :(\nThanks for getting my mod! :D\n- HGThePublisher", false);
 
             hardMode = Config.Bind("Settings", "Impossible", false, "If this mod wasn't a challenge enough, try beating this.");
         }
