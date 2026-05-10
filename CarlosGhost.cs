@@ -32,6 +32,9 @@ namespace CarlosReturn
 
             FieldInfo fieldInfo3 = AccessTools.Field(typeof(Entity), "maxHideableLightLevel");
             fieldInfo3.SetValue(Entity, -1f);
+
+            if (CarlosBasePlugin.debug.Value)
+                ec.map.AddArrow(Entity, CarlosManager.carlosColor - new Color(0.15f, 0.15f, 0.15f, 0.3f));
         }
 
         private bool db = false;

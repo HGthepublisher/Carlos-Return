@@ -27,14 +27,11 @@ namespace CarlosReturn
                 ec.SpawnNPC(carlosGhost, rooms[Random.Range(1, rooms.Count)].position);
         }
 
-        private FieldInfo breakerInfo;
         private void Update()
         {
-            if (breakerInfo == null)
-                breakerInfo = AccessTools.Field(typeof(BreakerController), "fuseBlown");
-            if (breakerInfo == null) return;
-
-            fuseBlown = (bool)breakerInfo.GetValue(null);
+            FieldInfo blown = typeof(BreakerController).GetField("fuseBlown", BindingFlags.NonPublic | BindingFlags.Static);
+            if ((bool)blown.GetValue(null))
+                fuseBlown = (bool)blown.GetValue(null);
         }
     }
 }

@@ -32,18 +32,18 @@ namespace CarlosReturn
     {
         public CarlosGhost_Prep(CarlosGhost carGhost) : base(carGhost) { }
 
-        public override void Exit()
-        {
-            base.Exit();
-            carlosGhost.spriteRenderer[0].enabled = true;
-        }
-
         public override void Update()
         {
             base.Update();
             carlosGhost.LookAtPlayer(carlosGhost.ec.Players[0]);
             if (!carlosGhost.looker.PlayerInSight() && carlosGhost.GetDistance(carlosGhost.ec.Players[0].transform) >= 75)
                 carlosGhost.behaviorStateMachine.ChangeState(new CarlosGhost_Wander(carlosGhost));
+        }
+
+        public override void Exit()
+        {
+            base.Exit();
+            carlosGhost.spriteRenderer[0].enabled = true;
         }
 
         public override void DestinationEmpty() => base.DestinationEmpty();

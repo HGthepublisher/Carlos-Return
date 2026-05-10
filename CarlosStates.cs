@@ -57,7 +57,7 @@ namespace CarlosReturn
         {
             base.Update();
             carlos.SetSpeed(CalculateSpeed(carlos.calmSpeed));
-            carlos.SetRoomAvoidance(gameManager.FoundNotebooks <= (gameManager.NotebookTotal - 1));
+            carlos.SetRoomAvoidance(carlos.TotalNotebooks() <= (gameManager.NotebookTotal - 1));
 
             if (playerSaw)
             {
@@ -79,9 +79,12 @@ namespace CarlosReturn
         public override void Hear(GameObject source, Vector3 position, int value)
         {
             base.Hear(source, position, value);
-            locker = source ? source.GetComponent<HideableLocker>() : null;
-            checkingLocker = locker;
-            ChangeNavigationState(new NavigationState_TargetPosition(npc, 1, position));
+            if (CarlosBasePlugin.hardMode.Value || CarlosManager.rightAnswers + CarlosManager.wrongAnswers > carlos.startingNotebooks + 1)
+            {
+                locker = source ? source.GetComponent<HideableLocker>() : null;
+                checkingLocker = locker;
+                ChangeNavigationState(new NavigationState_TargetPosition(npc, 1, position));
+            }
         }
 
         private bool seesPlayer = false;
@@ -149,7 +152,7 @@ namespace CarlosReturn
         {
             base.Update();
             carlos.SetSpeed(CalculateSpeed(carlos.speed));
-            carlos.SetRoomAvoidance(gameManager.FoundNotebooks <= (gameManager.NotebookTotal - 1));
+            carlos.SetRoomAvoidance(carlos.TotalNotebooks() <= (gameManager.NotebookTotal - 1));
 
             carlos.PlayAudio(carlos.carSighted, true);
 
@@ -179,7 +182,7 @@ namespace CarlosReturn
             base.PlayerInSight(player);
             if (checkingLocker) return;
 
-            ChangeNavigationState(new NavigationState_TargetPosition(npc, 1, player.transform.position));
+            ChangeNavigationState(new NavigationState_TargetPosition(npc, 2, player.transform.position));
             looking = true;
             seesPlayer = true;
         }
@@ -229,7 +232,7 @@ namespace CarlosReturn
             carlos.warnings++;
             warnings = carlos.warnings;
 
-            ChangeNavigationState(new NavigationState_DoNothing(npc, 0));
+            ChangeNavigationState(new NavigationState_DoNothing(npc, 1));
 
             if (warnings <= 3)
             {
@@ -246,7 +249,7 @@ namespace CarlosReturn
                 CarlosMusicManager.Instance.StopSound();
 
                 cooldown = carlos.madDelay;
-                ChangeNavigationState(new NavigationState_WanderFlee(npc, 0, carlos.player.DijkstraMap));
+                ChangeNavigationState(new NavigationState_WanderFlee(npc, 1, carlos.player.DijkstraMap));
 
                 foreach (Cell cell in carlos.ec.AllCells())
                     if (cell.hasLight)
@@ -313,7 +316,7 @@ namespace CarlosReturn
             CarlosMusicManager.Instance.PlaySound("car_angry", true);
 
             carlos.ChangeTexture(carlos.carlosMad);
-            ChangeNavigationState(new NavigationState_WanderRandom(npc, 0));
+            ChangeNavigationState(new NavigationState_WanderRandom(npc, 1));
 
             CoreGameManager.Instance.disablePause = true;
         }
@@ -323,7 +326,7 @@ namespace CarlosReturn
             base.Update();
 
             if (carlos.player && !carlos.player.plm.Entity.Hidden && !carlos.player.plm.Entity.Frozen)
-                ChangeNavigationState(new NavigationState_TargetPosition(npc, 0, carlos.player.transform.position));
+                ChangeNavigationState(new NavigationState_TargetPosition(npc, 2, carlos.player.transform.position));
 
             carlos.PlayAudio(carlos.carAngry, true);
         }
@@ -344,13 +347,10 @@ namespace CarlosReturn
         public override void DestinationEmpty()
         {
             base.DestinationEmpty();
-            ChangeNavigationState(new NavigationState_WanderRandom(npc, 0));
+            ChangeNavigationState(new NavigationState_WanderRandom(npc, 1));
         }
 
-        public override void Exit()
-        {
-            base.Exit();
-        }
+        public override void Exit() => base.Exit();
     }
 
     public class Carlos_CheckLocker : Carlos_StateBase
@@ -373,7 +373,7 @@ namespace CarlosReturn
                 return;
             }
 
-            ChangeNavigationState(new NavigationState_DoNothing(npc, 0));
+            ChangeNavigationState(new NavigationState_DoNothing(npc, 1));
             time = carlos.checkLockerTime;
         }
 
@@ -384,7 +384,7 @@ namespace CarlosReturn
             time -= Time.deltaTime * npc.ec.EnvironmentTimeScale;
             if (time <= 0)
             {
-                if ((Random.Range(gameManager.FoundNotebooks, gameManager.NotebookTotal) >= gameManager.NotebookTotal - 1 || CarlosBasePlugin.hardMode.Value) && locker.playerInside)
+                if ((Random.Range(carlos.TotalNotebooks(), gameManager.NotebookTotal) >= gameManager.NotebookTotal - 1 || CarlosBasePlugin.hardMode.Value) && locker.playerInside)
                 {
                     locker.ForceOpen();
                     carlos.ChangeBehaviourState(new Carlos_Warning(carlos));
@@ -394,9 +394,6 @@ namespace CarlosReturn
             }
         }
 
-        public override void DestinationEmpty()
-        {
-            base.DestinationEmpty();
-        }
+        public override void DestinationEmpty() => base.DestinationEmpty();
     }
 }

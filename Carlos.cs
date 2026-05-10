@@ -55,6 +55,9 @@ namespace CarlosReturn
             startingNotebooks = BaseGameManager.Instance.FoundNotebooks;
 
             behaviorStateMachine.ChangeState(new Carlos_Wander(this, false, true));
+
+            if (CarlosBasePlugin.debug.Value)
+                ec.map.AddArrow(Entity, CarlosManager.carlosColor);
         }
 
         private bool looping = false;
@@ -88,6 +91,12 @@ namespace CarlosReturn
         {
             return carAudio.AnyAudioIsPlaying;
         }
+
+        public int TotalNotebooks()
+        {
+            return CarlosManager.rightAnswers + CarlosManager.wrongAnswers;
+        }
+
         public void SetSpeed(float speed) => navigator.SetSpeed(CarlosBasePlugin.hardMode.Value ? speed * 1.2f : speed);
         public void SetRoomAvoidance(bool avoid) => navigator.SetRoomAvoidance(avoid);
         public void ChangeBehaviourState(Carlos_StateBase state) => behaviorStateMachine.ChangeState(state);

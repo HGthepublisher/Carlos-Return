@@ -30,7 +30,7 @@ namespace CarlosReturn
             new ModAsset() {assetName = "carlosghost_", assetPath = "Textures/CarlosGhost/", assetAmount = 8, imgPPU = 37},
 
             new ModAsset() {assetName = "pri_carlos", assetPath = "Textures/Carlos/", assetType = AssetType.Texture},
-            new ModAsset() {assetName = "car_poster", assetPath = "Textures/Posters/", assetType = AssetType.Texture, assetAmount = 14},
+            new ModAsset() {assetName = "car_poster", assetPath = "Textures/Posters/", assetType = AssetType.Texture, assetAmount = 15},
             new ModAsset() {assetName = "car_wall", assetPath = "Textures/Halls/", assetType = AssetType.Texture, assetAmount = 3},
             new ModAsset() {assetName = "car_floor", assetPath = "Textures/Halls/", assetType = AssetType.Texture, assetAmount = 2},
             new ModAsset() {assetName = "car_ceiling", assetPath = "Textures/Halls/", assetType = AssetType.Texture, assetAmount = 2},
@@ -65,6 +65,7 @@ namespace CarlosReturn
 
         public static List<SoundObject> audioclips = new List<SoundObject>();
 
+        public static ConfigEntry<bool> debug;
         public static ConfigEntry<bool> hardMode;
 
         public void Awake()
@@ -81,9 +82,10 @@ namespace CarlosReturn
             GeneratorManagement.Register(this, GenerationModType.Base, EditFloor);
 
             MTM101BaldiDevAPI.AddWarningScreen("Please turn all of your audio all the way up.\nCaptions are optional, but recommended.\n\nAudio is required and essential of this mod.\n\nGood luck. ;)\n- Carlos", false);
-            MTM101BaldiDevAPI.AddWarningScreen("Credits to BigThinker for J***** and ConfusedSeagull for their code.\nThis mod was developed for GraysLand.\n\n\nI had no idea how to code this,\nbut atleast I learned how to do this.", false);
-            MTM101BaldiDevAPI.AddWarningScreen("This is my first BB+ mod I've ever made, this mod was developed before BigThinker drama happened. This mod isn't affiliated with anything related to that.\nRIP BigThinker's Mods. :(\nThanks for getting my mod! :D\n- HGThePublisher", false);
+            MTM101BaldiDevAPI.AddWarningScreen("Credits to BigThinker for Joseph and ConfusedSeagull for their code.\nThis mod was developed for GraysLand.\n\n\nI had no idea how to code this,\nbut atleast I learned how to do this.", false);
+            MTM101BaldiDevAPI.AddWarningScreen("This is my first BB+ mod I've ever made, this was developed before Joseph is Real was privated.\nRIP Joseph. :(\nThanks for getting my mod! :D\n- HGThePublisher", false);
 
+            debug = Config.Bind("Dev", "Debug", false, "Adds stuff for debug, unless you want to cheat.");
             hardMode = Config.Bind("Settings", "Impossible", false, "If this mod wasn't a challenge enough, try beating this.");
         }
 
@@ -153,11 +155,11 @@ namespace CarlosReturn
                 .SetName("Carlos")
                 .SetEnum("carlos")
                 .SetMinMaxAudioDistance(12, 620)
-                .AddMetaFlag(NPCFlags.Standard)
+                .AddMetaFlag(NPCFlags.StandardAndHear)
                 .AddSpawnableRoomCategories(RoomCategory.Class)
                 .AddLooker()
                 .AddTrigger()
-                .SetPoster(ObjectCreators.CreateCharacterPoster(assetManager.Get<Texture2D>("pri_carlos"), "Carlos", "He's just a sub for Baldi, but it's after hours. He thinks it's just a game.\nHe's probably not cannon to Joseph."))
+                .SetPoster(ObjectCreators.CreateCharacterPoster(assetManager.Get<Texture2D>("pri_carlos"), "Carlos", "He's just a sub for Baldi, but there's a few issues.\nDon't make him too mad.\nHe doesn't like visitors."))
                 .Build();
 
             carlos.carAudio = carlos.GetComponent<AudioManager>();
@@ -189,7 +191,7 @@ namespace CarlosReturn
                 .SetEnum("carlosghost")
                 .SetWanderEnterRooms()
                 .SetMinMaxAudioDistance(10, 200)
-                .AddMetaFlag(NPCFlags.Standard)
+                .AddMetaFlag(NPCFlags.CanMove | NPCFlags.CanSee | NPCFlags.MakeNoise | NPCFlags.HasTrigger | NPCFlags.HasSprite)
                 .AddSpawnableRoomCategories(RoomCategory.Hall)
                 .SetFOV(60)
                 .IgnorePlayerVisibility()
