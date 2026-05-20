@@ -107,7 +107,7 @@ namespace CarlosReturn
             {
                 poweroutageTime = 60 * poweroutageMinutes;
                 FieldInfo fuseBlown = typeof(BreakerController).GetField("fuseBlown", BindingFlags.NonPublic | BindingFlags.Static);
-                if ((bool)fuseBlown.GetValue(null))
+                if (fuseBlown != null && !(bool)fuseBlown.GetValue(null))
                     breaker.Invoke("BlowFuse", 0);
             }
             else

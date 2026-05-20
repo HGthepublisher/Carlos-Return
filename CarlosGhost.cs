@@ -41,8 +41,10 @@ namespace CarlosReturn
         protected override void VirtualUpdate()
         {
             base.VirtualUpdate();
-            if (db == CarlosGhostManager.fuseBlown && CarlosManager.carlos.warnings < 4) return;
-            db = CarlosGhostManager.fuseBlown && CarlosManager.carlos.warnings < 4;
+            if (CarlosManager.carlos.warnings > 3) Despawn();
+
+            if (db == CarlosGhostManager.fuseBlown) return;
+            db = CarlosGhostManager.fuseBlown;
 
             if (db)
                 behaviorStateMachine.ChangeState(new CarlosGhost_Prep(this));

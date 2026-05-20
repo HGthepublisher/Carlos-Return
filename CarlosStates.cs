@@ -23,10 +23,13 @@ namespace CarlosReturn
 
     public class Carlos_Wander : Carlos_StateBase
     {
-        public Carlos_Wander(Carlos car, bool unhap = false, bool spawn = false) : base(car)
+        public Carlos_Wander(Carlos car, bool unhap = false, bool spawn = false, bool checkLocker = false, HideableLocker locker = null, Vector3 toPosition = default) : base(car)
         {
             unhappy = unhap;
             spawned = spawn;
+            checkingLocker = checkLocker;
+            this.locker = locker;
+            goTo = toPosition;
         }
 
         private readonly bool unhappy;
@@ -34,12 +37,17 @@ namespace CarlosReturn
 
         private bool canMove = true;
 
+        private Vector3 goTo;
+
         public override void Enter()
         {
             base.Enter();
             carlos.ChangeTexture(carlos.carlosHappy);
 
-            ChangeNavigationState(new NavigationState_WanderRandom(npc, 0));
+            if (checkingLocker)
+                ChangeNavigationState(new NavigationState_TargetPosition(npc, 1, goTo));
+            else
+                ChangeNavigationState(new NavigationState_WanderRandom(npc, 0));
 
             if (unhappy)
                 carlos.PlayAudio(carlos.carCantFind);
@@ -62,7 +70,7 @@ namespace CarlosReturn
             if (playerSaw)
             {
                 if (playerSight <= 0)
-                    carlos.ChangeBehaviourState(new Carlos_Follow(carlos, !seesPlayer, target));
+                    carlos.ChangeBehaviourState(new Carlos_Follow(carlos, !seesPlayer, checkingLocker ? soundPosition : target, checkingLocker, locker));
                 else
                     playerSight -= Time.deltaTime * npc.ec.EnvironmentTimeScale;
 
@@ -74,24 +82,11 @@ namespace CarlosReturn
             }
         }
 
-        private bool checkingLocker = false;
-        private HideableLocker locker = null;
-        public override void Hear(GameObject source, Vector3 position, int value)
-        {
-            base.Hear(source, position, value);
-            if (CarlosBasePlugin.hardMode.Value || CarlosManager.rightAnswers + CarlosManager.wrongAnswers > carlos.startingNotebooks + 1)
-            {
-                locker = source ? source.GetComponent<HideableLocker>() : null;
-                checkingLocker = locker;
-                ChangeNavigationState(new NavigationState_TargetPosition(npc, 1, position));
-            }
-        }
-
         private bool seesPlayer = false;
         public override void PlayerInSight(PlayerManager player)
         {
             base.PlayerInSight(player);
-            ChangeNavigationState(new NavigationState_DoNothing(npc, 1));
+            ChangeNavigationState(new NavigationState_DoNothing(npc, 2));
             canMove = false;
             playerSaw = true;
             seesPlayer = true;
@@ -103,11 +98,27 @@ namespace CarlosReturn
             seesPlayer = false;
         }
 
+        private bool checkingLocker = false;
+        private HideableLocker locker = null;
+        private Vector3 soundPosition;
+        public override void Hear(GameObject source, Vector3 position, int value)
+        {
+            base.Hear(source, position, value);
+            if (CarlosBasePlugin.hardMode.Value || carlos.TotalNotebooks() > carlos.startingNotebooks + 1 || playerSaw)
+            {
+                locker = source ? source.GetComponent<HideableLocker>() : null;
+                checkingLocker = locker;
+                soundPosition = position;
+                if (!playerSaw)
+                    ChangeNavigationState(new NavigationState_TargetPosition(npc, 1, position));
+            }
+        }
+
         public override void OnStateTriggerStay(Entity otherEntity, Collider other, bool validCollision)
         {
             base.OnStateTriggerStay(otherEntity, other, validCollision);
             if (validCollision && other.GetComponent<PlayerManager>())
-                carlos.behaviorStateMachine.ChangeState(new Carlos_Warning(carlos));
+                carlos.ChangeBehaviourState(new Carlos_Warning(carlos));
         }
 
         public override void DestinationEmpty()
@@ -122,10 +133,13 @@ namespace CarlosReturn
 
     public class Carlos_Follow : Carlos_StateBase
     {
-        public Carlos_Follow(Carlos car, bool goTo = false, Vector3 target = new Vector3()) : base(car)
+        public Carlos_Follow(Carlos car, bool goTo = false, Vector3 target = new Vector3(), bool openLocker = false, HideableLocker hideableLocker = null) : base(car)
         {
             _goTo = goTo;
             _target = target;
+            
+            checkingLocker = openLocker;
+            locker = hideableLocker;
         }
 
         private readonly bool _goTo;
@@ -159,7 +173,7 @@ namespace CarlosReturn
             if (looking)
                 timeLeft = carlos.unnoticeDelay;
             else if (timeLeft <= 0)
-                carlos.behaviorStateMachine.ChangeState(new Carlos_Wander(carlos, true));
+                carlos.ChangeBehaviourState(new Carlos_Wander(carlos, true));
             else
                 timeLeft -= Time.deltaTime * npc.ec.EnvironmentTimeScale;
         }
@@ -208,7 +222,7 @@ namespace CarlosReturn
         {
             base.OnStateTriggerStay(otherEntity, other, validCollision);
             if (validCollision && other.GetComponent<PlayerManager>())
-                carlos.behaviorStateMachine.ChangeState(new Carlos_Warning(carlos));
+                carlos.ChangeBehaviourState(new Carlos_Warning(carlos));
         }
 
         public override void Exit()
@@ -225,6 +239,9 @@ namespace CarlosReturn
         private float cooldown;
 
         private bool inSight = false;
+        private Vector3 sightedPosition;
+        private bool checkingLocker = false;
+        private HideableLocker locker = null;
 
         public override void Enter()
         {
@@ -264,11 +281,20 @@ namespace CarlosReturn
         {
             base.PlayerInSight(player);
             inSight = true;
+            sightedPosition = player.transform.position;
         }
         public override void PlayerLost(PlayerManager player)
         {
             base.PlayerLost(player);
             inSight = false;
+        }
+
+        public override void Hear(GameObject source, Vector3 position, int value)
+        {
+            base.Hear(source, position, value);
+            locker = source ? source.GetComponent<HideableLocker>() : null;
+            checkingLocker = locker;
+            sightedPosition = position;
         }
 
         public override void Update()
@@ -280,11 +306,11 @@ namespace CarlosReturn
             if (cooldown <= 0)
             {
                 if (warnings > 3)
-                    carlos.behaviorStateMachine.ChangeState(new Carlos_Chase(carlos));
+                    carlos.ChangeBehaviourState(new Carlos_Chase(carlos));
                 else if (inSight)
-                    carlos.behaviorStateMachine.ChangeState(new Carlos_Follow(carlos));
+                    carlos.ChangeBehaviourState(new Carlos_Follow(carlos));
                 else
-                    carlos.behaviorStateMachine.ChangeState(new Carlos_Wander(carlos));
+                    carlos.ChangeBehaviourState(new Carlos_Wander(carlos, checkLocker: checkingLocker, locker: locker, toPosition: sightedPosition));
             }
         }
 
@@ -366,7 +392,7 @@ namespace CarlosReturn
         public override void Enter()
         {
             base.Enter();
-            if (forceOpen)
+            if (forceOpen && locker.playerInside)
             {
                 locker.ForceOpen();
                 carlos.ChangeBehaviourState(new Carlos_Warning(carlos));

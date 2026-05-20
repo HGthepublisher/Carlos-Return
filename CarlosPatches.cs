@@ -100,7 +100,7 @@ namespace CarlosReturn
             private static void InitializePatch(BreakerController __instance)
             {
                 FieldInfo info = typeof(BreakerController).GetField("maxPowered", BindingFlags.NonPublic | BindingFlags.Instance);
-                info.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
+                info?.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
             }
         }
         [HarmonyPatch(typeof(PowerLeverGauge), "Initialize")]
@@ -112,7 +112,7 @@ namespace CarlosReturn
                 FieldInfo leverInfo = typeof(PowerLeverGauge).GetField("maxLevers", BindingFlags.NonPublic | BindingFlags.Instance);
                 leverInfo.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
                 FieldInfo speedInfo = typeof(PowerLeverGauge).GetField("gaugeSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
-                speedInfo.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 4);
+                speedInfo?.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 0.5f : 0.25f);
             }
         }
 
@@ -180,6 +180,8 @@ namespace CarlosReturn
             private static void AwakePatch(NameManager __instance)
             {
                 FieldInfo audSource = typeof(NameManager).GetField("audSource", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (audSource == null) return;
+
                 AudioSource source = (AudioSource)audSource.GetValue(__instance);
                 source.volume = 0;
 
@@ -241,32 +243,22 @@ namespace CarlosReturn
                 AudioManager audMan = (AudioManager)audManInfo.GetValue(instance);
 
                 while (dijkstraMap.PendingUpdate)
-                {
                     yield return null;
-                }
 
                 foreach (NPC npc in ec.Npcs)
-                {
                     if (npc.Navigator.enabled && (!npc.Entity.GetComponent<CarlosGhost>()))
                     {
                         NavigationState_WanderFleeOverride navigationState_WanderFleeOverride = new NavigationState_WanderFleeOverride(npc, 31, dijkstraMap);
                         fleeStates.Add(navigationState_WanderFleeOverride);
                         npc.navigationStateMachine.ChangeState(navigationState_WanderFleeOverride);
                     }
-                }
 
                 while (audMan.QueuedAudioIsPlaying)
-                {
                     yield return null;
-                }
 
                 foreach (NavigationState_WanderFleeOverride fleeState in fleeStates)
-                {
                     if (fleeState != null && fleeState.npc != null)
-                    {
                         fleeState.End();
-                    }
-                }
 
                 dijkstraMap.Deactivate();
                 fleeStates.Clear();

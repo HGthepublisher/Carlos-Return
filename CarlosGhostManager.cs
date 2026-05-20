@@ -1,6 +1,4 @@
-﻿using HarmonyLib;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -30,7 +28,7 @@ namespace CarlosReturn
         private void Update()
         {
             FieldInfo blown = typeof(BreakerController).GetField("fuseBlown", BindingFlags.NonPublic | BindingFlags.Static);
-            if ((bool)blown.GetValue(null))
+            if (blown != null)
                 fuseBlown = (bool)blown.GetValue(null);
         }
     }
