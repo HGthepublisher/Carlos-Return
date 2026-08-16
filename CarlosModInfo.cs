@@ -4,7 +4,7 @@
     {
         public const string modName = "carlosreturn";
         public const string modDesc = "Carlos has returned.";
-        public const string modVersion = "1.0.1";
+        public const string modVersion = "1.1.1";
         public const string modPath = "hgthepublisher.bbplus.carlosreturn";
     }
 }

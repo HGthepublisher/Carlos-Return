@@ -57,7 +57,7 @@ namespace CarlosReturn
             new ModAsset() {assetName = "car_act_incorrect", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = ">:(", color = new Color32(216, 12, 14, 255)},
             new ModAsset() {assetName = "car_door_open", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Creak]", color = Color.white},
             new ModAsset() {assetName = "car_door_shut", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Slam]", color = Color.white},
-            new ModAsset() {assetName = "car_door_swing", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[SSwwiinngg]", color = Color.white},
+            new ModAsset() {assetName = "car_door_swing", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Swwinngg]", color = Color.white},
             new ModAsset() {assetName = "car_alarm", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[!!!]", color = Color.red},
             new ModAsset() {assetName = "car_alarm_reverb", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[!!!]", color = Color.red},
             new ModAsset() {assetName = "car_buzz", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = ":)", color = Color.grey},
