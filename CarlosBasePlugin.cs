@@ -81,9 +81,9 @@ namespace CarlosReturn
             GeneratorManagement.Register(this, GenerationModType.Preparation, ChangeFloorTypes);
             GeneratorManagement.Register(this, GenerationModType.Base, EditFloor);
 
-            MTM101BaldiDevAPI.AddWarningScreen("Please turn all of your audio all the way up.\nCaptions are optional, but recommended.\n\nAudio is required and essential of this mod.\n\nGood luck. ;)\n- Carlos", false);
-            MTM101BaldiDevAPI.AddWarningScreen("Credits to BigThinker for Joseph and ConfusedSeagull for their code.\nThis mod was developed for GraysLand.\n\n\nI had no idea how to code this,\nbut atleast I learned how to do this.", false);
-            MTM101BaldiDevAPI.AddWarningScreen("This is my first BB+ mod I've ever made, this was developed before Joseph is Real was privated.\nRIP Joseph. :(\nThanks for getting my mod! :D\n- HGThePublisher", false);
+            MTM101BaldiDevAPI.AddWarningScreen("This mod is NOT affiliated with Joseph.\nThanks for getting my mod! :D\n- HGThePublisher", false);
+            MTM101BaldiDevAPI.AddWarningScreen("Credits to ConfusedSeagull for code inspiration, this is my first mod.\nThis mod was entirely developed from scratch in inspiration from GraysLand's videos.\n", false);
+            MTM101BaldiDevAPI.AddWarningScreen("Audio is required and essential of this mod, either that or turn on captions.\n\nGood luck...\n- Carlos", false);
 
             debug = Config.Bind("Dev", "Debug", false, "Adds stuff for debug, unless you want to cheat.");
             hardMode = Config.Bind("Settings", "Impossible", false, "If this mod wasn't a challenge enough, try beating this.");

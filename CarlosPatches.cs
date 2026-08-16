@@ -112,7 +112,7 @@ namespace CarlosReturn
                 FieldInfo leverInfo = typeof(PowerLeverGauge).GetField("maxLevers", BindingFlags.NonPublic | BindingFlags.Instance);
                 leverInfo.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
                 FieldInfo speedInfo = typeof(PowerLeverGauge).GetField("gaugeSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
-                speedInfo?.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 0.5f : 0.25f);
+                speedInfo?.SetValue(__instance, 4);
             }
         }
 
