@@ -8,10 +8,10 @@ namespace CarlosReturn
         public Carlos_StateBase(Carlos car) : base(car)
         {
             carlos = car;
-            gameManager = GameObject.FindObjectOfType<MainGameManager>();
+            gameManager = BaseGameManager.Instance;
         }
 
-        public MainGameManager gameManager;
+        public BaseGameManager gameManager;
 
         public int warnings = 0;
 
@@ -44,7 +44,7 @@ namespace CarlosReturn
             base.Enter();
             carlos.ChangeTexture(carlos.carlosHappy);
 
-            if (checkingLocker)
+            if (checkingLocker && !CarlosBasePlugin.easy.Value)
                 ChangeNavigationState(new NavigationState_TargetPosition(npc, 1, goTo));
             else
                 ChangeNavigationState(new NavigationState_WanderRandom(npc, 0));
@@ -65,9 +65,12 @@ namespace CarlosReturn
         {
             base.Update();
             carlos.SetSpeed(CalculateSpeed(carlos.calmSpeed));
-            carlos.SetRoomAvoidance(carlos.TotalNotebooks() <= (gameManager.NotebookTotal - 1));
+            if (!CarlosBasePlugin.easy.Value)
+				carlos.SetRoomAvoidance(carlos.TotalNotebooks() <= (gameManager.NotebookTotal - 1));
+            else
+                carlos.SetRoomAvoidance(false);
 
-            if (playerSaw)
+			if (playerSaw)
             {
                 if (playerSight <= 0)
                     carlos.ChangeBehaviourState(new Carlos_Follow(carlos, !seesPlayer, checkingLocker ? soundPosition : target, checkingLocker, locker));
@@ -104,7 +107,8 @@ namespace CarlosReturn
         public override void Hear(GameObject source, Vector3 position, int value)
         {
             base.Hear(source, position, value);
-            if (CarlosBasePlugin.hardMode.Value || carlos.TotalNotebooks() > carlos.startingNotebooks + 1 || playerSaw)
+            bool easyMode = CarlosBasePlugin.easy.Value;
+			if (CarlosBasePlugin.impossible.Value || carlos.TotalNotebooks() > carlos.startingNotebooks + 1 || playerSaw && !easyMode)
             {
                 locker = source ? source.GetComponent<HideableLocker>() : null;
                 checkingLocker = locker;
@@ -124,7 +128,7 @@ namespace CarlosReturn
         public override void DestinationEmpty()
         {
             base.DestinationEmpty();
-            if (checkingLocker)
+            if (checkingLocker && !CarlosBasePlugin.easy.Value)
                 carlos.ChangeBehaviourState(new Carlos_CheckLocker(carlos, locker));
             else if (canMove)
                 ChangeNavigationState(new NavigationState_WanderRandom(npc, 0));
@@ -194,7 +198,7 @@ namespace CarlosReturn
         public override void PlayerInSight(PlayerManager player)
         {
             base.PlayerInSight(player);
-            if (checkingLocker) return;
+            if (checkingLocker && !CarlosBasePlugin.easy.Value) return;
 
             ChangeNavigationState(new NavigationState_TargetPosition(npc, 2, player.transform.position));
             looking = true;
@@ -209,7 +213,7 @@ namespace CarlosReturn
         public override void DestinationEmpty()
         {
             base.DestinationEmpty();
-            if (checkingLocker)
+            if (checkingLocker && !CarlosBasePlugin.easy.Value)
                 carlos.ChangeBehaviourState(new Carlos_CheckLocker(carlos, locker, true));
             else
             {
@@ -255,7 +259,7 @@ namespace CarlosReturn
             {
                 carlos.ChangeTexture(carlos.carlosNeutral[warnings - 1]);
                 carlos.PlayAudio(carlos.carWarnings[warnings - 1]);
-                cooldown = carlos.warningDelay;
+                cooldown = CarlosBasePlugin.easy.Value ? carlos.warningDelay * 2 : carlos.warningDelay;
             }
             else
             {
@@ -351,7 +355,7 @@ namespace CarlosReturn
         {
             base.Update();
 
-            if (carlos.player && !carlos.player.plm.Entity.Hidden && !carlos.player.plm.Entity.Frozen)
+            if (carlos.player && !carlos.player.plm.Entity.Hidden && !carlos.player.plm.Entity.Frozen && !CarlosBasePlugin.easy.Value)
                 ChangeNavigationState(new NavigationState_TargetPosition(npc, 2, carlos.player.transform.position));
 
             carlos.PlayAudio(carlos.carAngry, true);
@@ -362,6 +366,13 @@ namespace CarlosReturn
             base.OnStateTriggerStay(otherEntity, other, validCollision);
             if (validCollision && other.GetComponent<PlayerManager>())
                 CoreGameManager.Instance.ReturnToMenu();
+        }
+
+        public override void PlayerInSight(PlayerManager player)
+        {
+            base.PlayerInSight(player);
+            if (CarlosBasePlugin.easy.Value)
+                ChangeNavigationState(new NavigationState_TargetPosition(npc, 2, player.transform.position));
         }
 
         public override void Hear(GameObject source, Vector3 position, int value)
@@ -410,7 +421,7 @@ namespace CarlosReturn
             time -= Time.deltaTime * npc.ec.EnvironmentTimeScale;
             if (time <= 0)
             {
-                if ((Random.Range(carlos.TotalNotebooks(), gameManager.NotebookTotal) >= gameManager.NotebookTotal - 1 || CarlosBasePlugin.hardMode.Value) && locker.playerInside)
+                if ((Random.Range(carlos.TotalNotebooks(), gameManager.NotebookTotal) >= gameManager.NotebookTotal - 1 || CarlosBasePlugin.impossible.Value) && locker.playerInside)
                 {
                     locker.ForceOpen();
                     carlos.ChangeBehaviourState(new Carlos_Warning(carlos));

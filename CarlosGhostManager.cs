@@ -18,7 +18,7 @@ namespace CarlosReturn
 
             NPC carlosGhost = CarlosBasePlugin.assetManager.Get<NPC>("CarlosGhost");
             int numberOfGhosts = CoreGameManager.Instance.sceneObject.levelTitle == "F1" ? 5 : CoreGameManager.Instance.sceneObject.levelTitle == "F2" ? 7 : 8;
-            if (CarlosBasePlugin.hardMode.Value)
+            if (CarlosBasePlugin.impossible.Value)
                 numberOfGhosts = (int)(numberOfGhosts * 1.5f);
 
             for (int i = 1; i <= numberOfGhosts; i++)

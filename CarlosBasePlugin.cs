@@ -4,6 +4,7 @@ using HarmonyLib;
 using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
 using MTM101BaldAPI.ObjectCreation;
+using MTM101BaldAPI.OptionsAPI;
 using MTM101BaldAPI.Registers;
 using System;
 using System.Collections;
@@ -18,6 +19,14 @@ namespace CarlosReturn
     public class CarlosBasePlugin : BaseUnityPlugin
     {
         public static CarlosBasePlugin instance;
+
+        public static ConfigEntry<bool> debug;
+        public static ConfigEntry<bool> debugArrows;
+        public static ConfigEntry<bool> debugKeybinds;
+
+        public static ConfigEntry<bool> impossible;
+        public static ConfigEntry<bool> easy;
+        public static ConfigEntry<bool> explorer;
 
         public static AssetManager assetManager = new AssetManager();
 
@@ -46,11 +55,11 @@ namespace CarlosReturn
             new ModAsset() {assetName = "carlos_lost", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "..... ???"},
             new ModAsset() {assetName = "carlos_notice", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = ". . ."},
             new ModAsset() {assetName = "carlos_warning", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitles = new string[] {"?", "...", "!!!"}, assetAmount = 3},
-            new ModAsset() {assetName = "carlos_angry", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "*ANGRY SCREAMING*"},
-            new ModAsset() {assetName = "carlosghost_ambience_low", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "*Humming*"},
-            new ModAsset() {assetName = "carlosghost_ambience", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "*HUMMING*"},
+            new ModAsset() {assetName = "carlos_angry", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "[ANGRY SCREAMING]"},
+            new ModAsset() {assetName = "carlosghost_ambience_low", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "[Humming]"},
+            new ModAsset() {assetName = "carlosghost_ambience", assetPath = "Sounds/Carlos/", assetType = AssetType.Audio, soundType = SoundType.Voice, subtitle = "[HUMMING]"},
 
-            new ModAsset() {assetName = "car_ambient", assetPath = "Sounds/Ambience/", assetType = AssetType.Audio, assetAmount = 8},
+            new ModAsset() {assetName = "car_ambient", assetPath = "Sounds/Ambience/", assetType = AssetType.Audio, assetAmount = 12},
 
             new ModAsset() {assetName = "car_notebook_collect", assetPath = "Sounds/Effects/", assetType = AssetType.Audio},
             new ModAsset() {assetName = "car_act_correct", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = ":)", color = Color.white},
@@ -58,15 +67,17 @@ namespace CarlosReturn
             new ModAsset() {assetName = "car_door_open", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Creak]", color = Color.white},
             new ModAsset() {assetName = "car_door_shut", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Slam]", color = Color.white},
             new ModAsset() {assetName = "car_door_swing", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Swwinngg]", color = Color.white},
+            new ModAsset() {assetName = "car_locker_open", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Swing]", color = Color.white},
+            new ModAsset() {assetName = "car_locker_shut", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[SLAM]", color = Color.white},
+            new ModAsset() {assetName = "car_tape", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[Distorted Hum]", color = Color.grey},
             new ModAsset() {assetName = "car_alarm", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[!!!]", color = Color.red},
             new ModAsset() {assetName = "car_alarm_reverb", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[!!!]", color = Color.red},
             new ModAsset() {assetName = "car_buzz", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = ":)", color = Color.grey},
+            new ModAsset() {assetName = "car_balloon_pop", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[POP]", color = Color.white},
+            new ModAsset() {assetName = "car_matchballoon_reveal", assetPath = "Sounds/Effects/", assetType = AssetType.Audio, subtitle = "[?]", color = Color.grey},
         };
 
-        public static List<SoundObject> audioclips = new List<SoundObject>();
-
-        public static ConfigEntry<bool> debug;
-        public static ConfigEntry<bool> hardMode;
+        public static List<SoundObject> audioclips;
 
         public void Awake()
         {
@@ -77,6 +88,15 @@ namespace CarlosReturn
             carHarmony.PatchAll();
             LoadAssets();
 
+            debug = Config.Bind("Debug", "Debug", false, "Adds stuff for debug, unless you want to cheat.");
+            debugArrows = Config.Bind("Debug", "Debug Arrows", true, "Debugging option for entity map arrows.");
+            debugKeybinds = Config.Bind("Debug", "Debug Keybinds", true, "Debugging option for keybind stuff.");
+
+            impossible = Config.Bind("Modes", "Impossible Mode", false, "If this mod wasn't a challenge enough, try beating this.");
+            easy = Config.Bind("Modes", "Easy Mode", false, "For the people who find this mod too hard.");
+            explorer = Config.Bind("Modes", "Explorer Mode", false, "Simply removes Carlos for exploration.");
+            CustomOptionsCore.OnMenuInitialize += RegisterSettings;
+
             LoadingEvents.RegisterOnAssetsLoaded(Info, RegisterAssets(), LoadingEventOrder.Start);
             GeneratorManagement.Register(this, GenerationModType.Preparation, ChangeFloorTypes);
             GeneratorManagement.Register(this, GenerationModType.Base, EditFloor);
@@ -84,9 +104,6 @@ namespace CarlosReturn
             MTM101BaldiDevAPI.AddWarningScreen("This mod is NOT affiliated with Joseph.\nThanks for getting my mod! :D\n- HGThePublisher", false);
             MTM101BaldiDevAPI.AddWarningScreen("Credits to ConfusedSeagull for code inspiration, this is my first mod.\nThis mod was entirely developed from scratch in inspiration from GraysLand's videos.\n", false);
             MTM101BaldiDevAPI.AddWarningScreen("Audio is required and essential of this mod, either that or turn on captions.\n\nGood luck...\n- Carlos", false);
-
-            debug = Config.Bind("Dev", "Debug", false, "Adds stuff for debug, unless you want to cheat.");
-            hardMode = Config.Bind("Settings", "Impossible", false, "If this mod wasn't a challenge enough, try beating this.");
         }
 
         internal enum AssetType
@@ -221,15 +238,23 @@ namespace CarlosReturn
             for (int i = 1; i <= assets.First(asset => asset.assetName == "car_ambient").assetAmount; i++)
                 CarlosAmbienceManager.ambience.Add(assetManager.Get<SoundObject>("car_ambient" + i));
 
-            audioclips.Add(assetManager.Get<SoundObject>("car_notebook_collect"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_act_correct"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_act_incorrect"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_door_open"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_door_shut"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_door_swing"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_alarm"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_alarm_reverb"));
-            audioclips.Add(assetManager.Get<SoundObject>("car_buzz"));
+            audioclips = new List<SoundObject>
+            {
+                assetManager.Get<SoundObject>("car_notebook_collect"),
+                assetManager.Get<SoundObject>("car_act_correct"),
+                assetManager.Get<SoundObject>("car_act_incorrect"),
+                assetManager.Get<SoundObject>("car_door_open"),
+                assetManager.Get<SoundObject>("car_door_shut"),
+                assetManager.Get<SoundObject>("car_door_swing"),
+                assetManager.Get<SoundObject>("car_locker_open"),
+                assetManager.Get<SoundObject>("car_locker_shut"),
+                assetManager.Get<SoundObject>("car_tape"),
+                assetManager.Get<SoundObject>("car_alarm"),
+                assetManager.Get<SoundObject>("car_alarm_reverb"),
+                assetManager.Get<SoundObject>("car_buzz"),
+                assetManager.Get<SoundObject>("car_balloon_pop"),
+                assetManager.Get<SoundObject>("car_matchballoon_reveal"),
+            };
         }
 
         private bool posterOnce = false;
@@ -280,10 +305,12 @@ namespace CarlosReturn
             scene.levelObject.hallFloorTexs = new WeightedTexture2D[] { floorNumber >= 2 ? floorTexture1 : floorNumber == 1 ? floorTexture2 : floorTexture2 };
             scene.levelObject.hallCeilingTexs = new WeightedTexture2D[] { floorNumber >= 2 ? ceilingTexture2 : floorNumber == 1 ? ceilingTexture2 : ceilingTexture1 };
 
-            if (hardMode.Value)
+            if (impossible.Value)
                 scene.mapPrice = 999999;
-            else
+            else if (easy.Value)
                 scene.mapPrice = 1;
+            else
+                scene.mapPrice = 99;
 
             if (floorNumber >= 2)
             {
@@ -295,7 +322,7 @@ namespace CarlosReturn
             scene.levelObject.potentialStructures = new WeightedStructureWithParameters[] { };
 
             StructureWithParameters[] structures = new StructureWithParameters[0];
-            if (!hardMode.Value)
+            if (!impossible.Value)
             {
                 structures = new StructureWithParameters[]
                 {
@@ -364,6 +391,12 @@ namespace CarlosReturn
                 scene.levelObject.standardLightStrength = 7;
                 scene.levelObject.exitCount = 4;
             }
+        }
+
+        private void RegisterSettings(OptionsMenu optionsMenu, CustomOptionsHandler optionsHandler)
+        {
+            optionsHandler.AddCategory<CarlosDebugCategory>("Carlos' Return\nDebug");
+            optionsHandler.AddCategory<CarlosModesCategory>("Carlos' Return\nModes");
         }
     }
 }

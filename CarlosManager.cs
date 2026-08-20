@@ -1,5 +1,4 @@
-﻿using HarmonyLib;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -19,7 +18,9 @@ namespace CarlosReturn
         private bool baldiDestroyed = false;
         private bool spawned = false;
 
-        private float poweroutageMinutes = 4.5f;
+        public float poweroutageMinutes = 4.5f;
+
+        public bool forceSpawn = false;
 
         private readonly string[] floors = new string[]
         {
@@ -33,37 +34,43 @@ namespace CarlosReturn
         public static int rightAnswers = 0;
         public static int wrongAnswers = 0;
 
-        private BreakerController breaker;
+        public BreakerController breaker;
 
         private void Start()
         {
-            if (CarlosBasePlugin.hardMode.Value)
+            if (CarlosBasePlugin.impossible.Value)
                 poweroutageMinutes = 1.5f;
 
             rightAnswers = 0;
             wrongAnswers = 0;
 
-            if (CoreGameManager.Instance.sceneObject.levelTitle == "PIT")
+            if (BaseGameManager.Instance is PitstopGameManager)
             {
                 PropagatedAudioManagerAnimator animator = FindObjectsOfType<PropagatedAudioManagerAnimator>().First(manager => manager.name == "JohnnyBase");
                 animator.enabled = false;
                 Animator mouthAnim = animator.GetComponentInChildren<Animator>();
                 mouthAnim.enabled = false;
-                return;
             }
-            if (!floors.Any(floor => CoreGameManager.Instance.sceneObject.levelTitle == floor))
+
+            if (CoreGameManager.Instance.currentMode != Mode.Main)
                 Destroy(gameObject);
 
+            GameObject debugger = new GameObject("CarlosDebugManager");
+            CarlosDebugManager debugManager = debugger.AddComponent<CarlosDebugManager>();
+            debugManager.carlosManager = this;
+
             poweroutageTime = 60 * poweroutageMinutes;
-            breaker = BreakerController.allBreakers[0];
+            if (BreakerController.allBreakers.Count > 0)
+                breaker = BreakerController.allBreakers[0];
         }
 
-        private float poweroutageTime;
+        public float poweroutageTime;
         private void Update()
         {
-            if (!ec.Players[0] || !FindObjectOfType<MainGameManager>()) return;
 
-            if (!baldiDestroyed)
+            if (!ec.Players[0] || !MainGameManager.Instance && !forceSpawn) return;
+
+            if (!baldiDestroyed && !forceSpawn)
             {
                 HappyBaldi baldi = FindObjectOfType<HappyBaldi>();
                 if (baldi)
@@ -73,10 +80,14 @@ namespace CarlosReturn
                 }
             }
 
+            bool explorerMode = CarlosBasePlugin.explorer.Value;
+            bool easyMode = CarlosBasePlugin.easy.Value;
             int neededNotebooks = CoreGameManager.Instance.sceneObject.levelTitle == "F1" ? 3 : CoreGameManager.Instance.sceneObject.levelTitle == "F2" ? 2 : 1;
-            if (CarlosBasePlugin.hardMode.Value)
+            if (CarlosBasePlugin.impossible.Value)
                 neededNotebooks = 0;
-            if (!spawned && (rightAnswers >= neededNotebooks || wrongAnswers > 0))
+            else if (CarlosBasePlugin.easy.Value)
+                neededNotebooks += 1;
+            if (!spawned && (rightAnswers >= neededNotebooks || (wrongAnswers > 0 && !easyMode)) && !explorerMode || (forceSpawn && !spawned))
             {
                 spawned = true;
 
@@ -84,10 +95,13 @@ namespace CarlosReturn
                 foreach (RoomController room in ec.rooms)
                     if (room.category == RoomCategory.Class)
                         rooms.Add(room);
+                if (rooms.Count == 0)
+                    foreach (RoomController room in ec.rooms)
+                        rooms.Add(room);
 
                 NPC newCarlos = CarlosBasePlugin.assetManager.Get<NPC>("Carlos");
                 Carlos carlosInstance = (Carlos)ec.SpawnNPC(newCarlos, rooms[Random.Range(1, rooms.Count)].RandomEntitySafeCellNoGarbage().position);
-                if (CarlosBasePlugin.hardMode.Value)
+                if (CarlosBasePlugin.impossible.Value)
                     carlosInstance.warnings = 2;
 
                 carlos = carlosInstance;

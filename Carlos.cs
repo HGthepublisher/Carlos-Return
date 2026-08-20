@@ -26,7 +26,7 @@ namespace CarlosReturn
 
         public readonly float calmSpeed = 10;
         public readonly float speed = 19;
-        public readonly float madSpeed = 64;
+        public float madSpeed { get { return CarlosBasePlugin.easy.Value ? 24 : 64; } }
 
         public readonly float seeDelay = 1.2f;
         public readonly float hearDelay = 0.6f;
@@ -48,7 +48,7 @@ namespace CarlosReturn
                 player = ec.Players[0];
 
             Navigator.Entity.SetHeight(6.2f);
-            Navigator.SetSpeed(speed);
+            SetSpeed(speed);
 
             carAudio.volumeModifier = 1.85f;
 
@@ -56,7 +56,10 @@ namespace CarlosReturn
 
             behaviorStateMachine.ChangeState(new Carlos_Wander(this, false, true));
 
-            if (CarlosBasePlugin.debug.Value)
+            bool debug = CarlosBasePlugin.debug.Value;
+            bool arrows = CarlosBasePlugin.debugArrows.Value;
+            bool easy = CarlosBasePlugin.easy.Value;
+			if (debug && arrows || easy)
                 ec.map.AddArrow(Entity, CarlosManager.carlosColor);
         }
 
@@ -97,8 +100,8 @@ namespace CarlosReturn
             return CarlosManager.rightAnswers + CarlosManager.wrongAnswers;
         }
 
-        public void SetSpeed(float speed) => navigator.SetSpeed(CarlosBasePlugin.hardMode.Value ? speed * 1.2f : speed);
-        public void SetRoomAvoidance(bool avoid) => navigator.SetRoomAvoidance(avoid);
+        public void SetSpeed(float speed) => navigator.SetSpeed(CarlosBasePlugin.easy.Value && speed != 0 ? speed / 1.2f : CarlosBasePlugin.impossible.Value ? speed * 1.2f : speed);
+        public void SetRoomAvoidance(bool avoid) => navigator.SetRoomAvoidance(avoid || CarlosBasePlugin.easy.Value);
         public void ChangeBehaviourState(Carlos_StateBase state) => behaviorStateMachine.ChangeState(state);
     }
 }

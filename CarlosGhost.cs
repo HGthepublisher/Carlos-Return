@@ -18,7 +18,7 @@ namespace CarlosReturn
         {
             base.Initialize();
             Entity.SetHeight(6.4f);
-            if (CarlosBasePlugin.hardMode.Value)
+            if (CarlosBasePlugin.impossible.Value)
                 Navigator.speed *= 1.8f;
 
             SpriteRotator sr = spriteRenderer[0].gameObject.AddComponent<SpriteRotator>();
@@ -33,7 +33,9 @@ namespace CarlosReturn
             FieldInfo fieldInfo3 = AccessTools.Field(typeof(Entity), "maxHideableLightLevel");
             fieldInfo3.SetValue(Entity, -1f);
 
-            if (CarlosBasePlugin.debug.Value)
+            bool debug = CarlosBasePlugin.debug.Value;
+            bool arrows = CarlosBasePlugin.debugArrows.Value;
+            if (debug && arrows)
                 ec.map.AddArrow(Entity, CarlosManager.carlosColor - new Color(0.15f, 0.15f, 0.15f, 0.3f));
         }
 
@@ -46,10 +48,21 @@ namespace CarlosReturn
             if (db == CarlosGhostManager.fuseBlown) return;
             db = CarlosGhostManager.fuseBlown;
 
+            bool easyMode = CarlosBasePlugin.easy.Value;
+            bool debug = CarlosBasePlugin.debug.Value;
+            bool arrows = CarlosBasePlugin.debugArrows.Value;
             if (db)
+            {
+                if (easyMode && !(debug && arrows))
+                    ec.map.AddArrow(Entity, CarlosManager.carlosColor - new Color(0.15f, 0.15f, 0.15f, 0.3f));
                 behaviorStateMachine.ChangeState(new CarlosGhost_Prep(this));
+            }
             else
+            {
+                if (easyMode && !(debug && arrows))
+                    ec.map.arrowTargets[ec.map.arrowTargets.IndexOf(Entity)] = null;
                 behaviorStateMachine.ChangeState(new CarlosGhost_Hidden(this));
+            }
         }
 
         public void LookAtPlayer(PlayerManager player) => transform.rotation = Quaternion.LookRotation(player.transform.position - transform.position, Vector3.up);

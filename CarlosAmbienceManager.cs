@@ -12,8 +12,8 @@ namespace CarlosReturn
 
         public static List<SoundObject> ambience = new List<SoundObject>();
 
-        private float delayTime = 60;
-        private float RadomDelay() { return 60 * (Random.Range(8, 22) / 10); }
+        public static float delayTime = 60;
+        private float RadomDelay() { return 60 * ((float)Random.Range(8, 22) / 10); }
 
         private void Awake()
         {

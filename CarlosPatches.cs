@@ -52,7 +52,7 @@ namespace CarlosReturn
                         audioManager.PlaySound("car_music_elevator");
                         break;
                     case "school":
-                        if (!CarlosBasePlugin.hardMode.Value)
+                        if (!CarlosBasePlugin.impossible.Value)
                             audioManager.PlaySound("car_music_school");
                         break;
                 }
@@ -100,7 +100,7 @@ namespace CarlosReturn
             private static void InitializePatch(BreakerController __instance)
             {
                 FieldInfo info = typeof(BreakerController).GetField("maxPowered", BindingFlags.NonPublic | BindingFlags.Instance);
-                info?.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
+                info?.SetValue(__instance, CarlosBasePlugin.easy.Value ? 6 : CarlosBasePlugin.impossible.Value ? 2 : 5);
             }
         }
         [HarmonyPatch(typeof(PowerLeverGauge), "Initialize")]
@@ -110,7 +110,7 @@ namespace CarlosReturn
             private static void InitializePatch(PowerLeverGauge __instance)
             {
                 FieldInfo leverInfo = typeof(PowerLeverGauge).GetField("maxLevers", BindingFlags.NonPublic | BindingFlags.Instance);
-                leverInfo.SetValue(__instance, CarlosBasePlugin.hardMode.Value ? 2 : 5);
+                leverInfo.SetValue(__instance, CarlosBasePlugin.easy.Value ? 6 : CarlosBasePlugin.impossible.Value ? 2 : 5);
                 FieldInfo speedInfo = typeof(PowerLeverGauge).GetField("gaugeSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
                 speedInfo?.SetValue(__instance, 4);
             }
@@ -134,11 +134,10 @@ namespace CarlosReturn
             }
         }
 
-        [HarmonyPatch(typeof(AudioManager), "PlaySingle", new Type[] { typeof(SoundObject), typeof(float) })]
+        [HarmonyPatch(typeof(AudioManager))]
         internal class AudioManagerPatch
         {
-            [HarmonyPrefix]
-            private static void PlaySinglePatch(ref SoundObject file)
+            private static void ReplaceSound(ref SoundObject file)
             {
                 AudioClip clip = file.soundClip;
                 if (!clip) return;
@@ -154,13 +153,31 @@ namespace CarlosReturn
                     file = CarlosBasePlugin.audioclips[4];
                 else if (clip.name == "Doors_Swinging")
                     file = CarlosBasePlugin.audioclips[5];
-                else if (clip.name == "PowerAlarm_Raw")
+                else if (clip.name == "Doors_LockerOpen")
                     file = CarlosBasePlugin.audioclips[6];
-                else if (clip.name == "PowerAlarm_Reverb")
+                else if (clip.name == "Doors_Locker")
                     file = CarlosBasePlugin.audioclips[7];
-                else if (clip.name == "Elv_Buzz")
+                else if (clip.name == "AntiHearing")
                     file = CarlosBasePlugin.audioclips[8];
+                else if (clip.name == "PowerAlarm_Raw")
+                    file = CarlosBasePlugin.audioclips[9];
+                else if (clip.name == "PowerAlarm_Reverb")
+                    file = CarlosBasePlugin.audioclips[10];
+                else if (clip.name == "Elv_Buzz")
+                    file = CarlosBasePlugin.audioclips[11];
+                else if (clip.name == "Gen_Pop")
+                    file = CarlosBasePlugin.audioclips[12];
+                else if (clip.name == "MatchBalloon_Revealed")
+                    file = CarlosBasePlugin.audioclips[13];
             }
+
+            [HarmonyPatch("PlaySingle", new Type[] { typeof(SoundObject), typeof(float) })]
+            [HarmonyPrefix]
+            private static void PlaySinglePatch(ref SoundObject file) => ReplaceSound(ref file);
+
+            [HarmonyPatch("QueueAudio", new Type[] { typeof(SoundObject), typeof(bool) })]
+            [HarmonyPrefix]
+            private static void QueueAudioPatch(ref SoundObject file) => ReplaceSound(ref file);
         }
 
         [HarmonyPatch(typeof(SubtitleManager), "CreateSub")]
@@ -169,7 +186,7 @@ namespace CarlosReturn
             [HarmonyPrefix]
             private static bool CreateSubPatch()
             {
-                return !CarlosBasePlugin.hardMode.Value;
+                return !CarlosBasePlugin.impossible.Value;
             }
         }
 
